@@ -10,9 +10,11 @@ class DisplayManager {
   public:
     void init();
     void displayStartScreen();
+    void displayMenu(int selectedIndex);
     void showQuestion(const Question& question, int selectedChoice = 0);
     void highlightChoice(int selectedChoice = 0);
-    void displayCompletionScreen();
+    void displayCompletionScreen(const String& patientCode);
+    void displayExportInstructions();
 
   private:
     void displayQuestion();

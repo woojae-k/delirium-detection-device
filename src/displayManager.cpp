@@ -23,6 +23,26 @@ void DisplayManager::displayStartScreen() {
   tft_.drawString("Use joystick to choose", tft_.width() / 2, tft_.height() * 5 / 8, 2);
 }
 
+void DisplayManager::displayMenu(int selectedIndex) {
+  tft_.fillScreen(TFT_BLACK);
+  tft_.setTextDatum(MC_DATUM);
+  tft_.setTextSize(1);
+
+  const char* options[2] = {"1. Start Test", "2. Export Data"};
+  for (int i = 0; i < 2; ++i) {
+    const bool isSelected = (i == selectedIndex);
+    const uint16_t bg = isSelected ? TFT_WHITE : TFT_BLACK;
+    const uint16_t fg = isSelected ? TFT_BLACK : TFT_WHITE;
+    const int y = tft_.height() / 2 + (i * 30) - 20;
+    tft_.fillRect(20, y - 12, tft_.width() - 40, 28, bg);
+    tft_.setTextColor(fg, bg);
+    tft_.drawString(options[i], tft_.width() / 2, y, 4);
+  }
+
+  tft_.setTextColor(TFT_YELLOW, TFT_BLACK);
+  tft_.drawString("CAM Device Menu", tft_.width() / 2, 40, 2);
+}
+
 void DisplayManager::showQuestion(const Question& question, int selectedChoice) {
   setQuestion(question);
   displayQuestion();
@@ -80,7 +100,7 @@ void DisplayManager::displayQuestion() {
   tft_.drawFastVLine(option_width, question_area_height, screen_height - question_area_height, TFT_WHITE);
 }
 
-void DisplayManager::displayCompletionScreen() {
+void DisplayManager::displayCompletionScreen(const String& patientCode) {
   tft_.fillScreen(TFT_BLACK);
   tft_.setTextColor(TFT_GREEN, TFT_BLACK);
   tft_.setTextSize(1);
@@ -89,12 +109,30 @@ void DisplayManager::displayCompletionScreen() {
   // Split into two lines so it stays within the 320x240 layout
   const int cx = tft_.width() / 2;
   const int cy = tft_.height() / 2;
-  tft_.drawString("Assessment", cx, cy - 14, 4);
-  tft_.drawString("Complete",   cx, cy + 14, 4);
+  tft_.drawString("Assessment", cx, cy - 24, 4);
+  tft_.drawString("Complete",   cx, cy + 2, 4);
+  tft_.setTextColor(TFT_WHITE, TFT_BLACK);
+  tft_.drawString("Patient:", cx, cy + 34, 2);
+  tft_.drawString(patientCode, cx, cy + 52, 4);
+  tft_.setTextColor(TFT_YELLOW, TFT_BLACK);
+  tft_.drawString("Press SELECT to return", cx, cy + 86, 2);
 
   Serial.println("--- Assessment Complete ---");
   Serial.println("Press RESET (Pin 19) to start over.");
   
+}
+
+void DisplayManager::displayExportInstructions() {
+  tft_.fillScreen(TFT_BLACK);
+  tft_.setTextColor(TFT_WHITE, TFT_BLACK);
+  tft_.setTextDatum(MC_DATUM);
+  tft_.setTextSize(1);
+
+  tft_.drawString("Connect to WiFi:", tft_.width() / 2, 60, 2);
+  tft_.drawString("CAM_Device", tft_.width() / 2, 80, 4);
+  tft_.drawString("Open browser to", tft_.width() / 2, 130, 2);
+  tft_.drawString("192.168.4.1", tft_.width() / 2, 155, 4);
+  tft_.drawString("Press SELECT to exit", tft_.width() / 2, 200, 2);
 }
 
 void DisplayManager::highlightChoice(int selectedChoice) {
