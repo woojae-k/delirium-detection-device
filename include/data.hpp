@@ -3,12 +3,11 @@
 
 struct Question {
   const char* prompt;
-  const char* choiceA;
-  const char* choiceB;
-  int         correctChoice;
+  const char* choices[4];
+  int         correctChoice; // 0-3
 };
 
-enum JoystickState { STATE_NEUTRAL, STATE_LEFT, STATE_RIGHT };
+enum JoystickState { STATE_NEUTRAL, STATE_LEFT, STATE_RIGHT, STATE_UP, STATE_DOWN };
 
 
 #endif

@@ -10,13 +10,21 @@ class QuestionManager {
     void nextQuestion();
     void reset();
     const Question& getCurrentQuestion();
-    int getQuestionCount();
-    int getCurrentQuestionIndex();
-    bool isQuizComplete();
+    int getQuestionCount() const;
+    int getCurrentQuestionIndex() const;
+    bool isQuizComplete() const;
 
   private:
-    static const Question questions[];
+    static const Question baseQuestions_[];
+    static const int questionCount_;
+
+    Question workingQuestion_;
+    int questionOrder_[10]; // max supported questions
     int currentQuestionIndex_{0};
+
+    void shuffleQuestions();
+    void shuffleChoices(Question& q);
+    void buildWorkingQuestion(int baseIndex);
 };
 
 

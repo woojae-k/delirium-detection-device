@@ -9,6 +9,7 @@
 class DisplayManager {
   public:
     void init();
+    void displayStartScreen();
     void showQuestion(const Question& question, int selectedChoice = 0);
     void highlightChoice(int selectedChoice = 0);
     void displayCompletionScreen();

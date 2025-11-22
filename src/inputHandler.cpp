@@ -1,25 +1,38 @@
-#include "InputHandler.hpp"
+#include "inputHandler.hpp"
 
 
 void InputHandler::init() {
   pinMode(SELECT_BUTTON_PIN, INPUT_PULLUP);
   pinMode(RESET_BUTTON_PIN, INPUT_PULLUP);
+  pinMode(JOYSTICK_X_PIN, INPUT);
+  pinMode(JOYSTICK_Y_PIN, INPUT);
   currentJoyState = STATE_NEUTRAL;
   lastJoyState = STATE_NEUTRAL;
 }
 
 bool InputHandler::checkJoystick() {
   int joyX = analogRead(JOYSTICK_X_PIN);
+  int joyY = analogRead(JOYSTICK_Y_PIN);
   currentJoyState = STATE_NEUTRAL;
 
-  if (joyX < JOY_THRESHOLD_LOW) currentJoyState = STATE_LEFT;
-  else if (joyX > JOY_THRESHOLD_HIGH) currentJoyState = STATE_RIGHT;
-  else if (joyX > JOY_DEADZONE_LOW && joyX < JOY_DEADZONE_HIGH) currentJoyState = STATE_NEUTRAL;
+  // Prioritize vertical movement when both axes are deflected outside the deadzone
+  if (joyY < JOY_THRESHOLD_LOW) {
+    currentJoyState = STATE_UP;
+  } else if (joyY > JOY_THRESHOLD_HIGH) {
+    currentJoyState = STATE_DOWN;
+  } else if (joyX < JOY_THRESHOLD_LOW) {
+    currentJoyState = STATE_LEFT;
+  } else if (joyX > JOY_THRESHOLD_HIGH) {
+    currentJoyState = STATE_RIGHT;
+  } else if (joyX > JOY_DEADZONE_LOW && joyX < JOY_DEADZONE_HIGH &&
+             joyY > JOY_DEADZONE_LOW && joyY < JOY_DEADZONE_HIGH) {
+    currentJoyState = STATE_NEUTRAL;
+  }
 
-  bool stateChanged = (currentJoyState != lastJoyState);
-  
+  // Only signal when we move into a directional state (ignore neutral jitter)
+  bool stateChanged = (currentJoyState != STATE_NEUTRAL && currentJoyState != lastJoyState);
+
   lastJoyState = currentJoyState;
-  
   return stateChanged;
 
 }
@@ -55,4 +68,3 @@ bool InputHandler::checkSelectButton() {
   lastSelectState = currentSelectState;
   return stateChanged;
 }
-

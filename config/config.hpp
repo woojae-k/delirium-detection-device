@@ -3,8 +3,9 @@
 
 // PIN DEFINITIONS 
 #define SELECT_BUTTON_PIN 21 // Button to confirm choice
-#define RESET_BUTTON_PIN  22 // Button to reset the device
-#define JOYSTICK_X_PIN    33 // Analog pin for Joystick X-axis
+#define RESET_BUTTON_PIN  22 // Button to reset the device (D19 wiring)
+#define JOYSTICK_X_PIN    33 // Analog pin for Joystick X-axis (ADC)
+#define JOYSTICK_Y_PIN    35 // Analog pin for Joystick Y-axis (ADC; input-only, fine for joystick)
 // End of Pin Definitions
 
 // Joystick analog thresholds (Tune these by checking Serial Monitor)
