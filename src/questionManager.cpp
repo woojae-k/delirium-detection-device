@@ -3,6 +3,7 @@
 #include <esp_random.h>
 #include "config.hpp"
 
+//sample questions
 const Question QuestionManager::baseQuestions_[] = {
   { "Which season has snow?", { "Summer", "Winter", "Spring", "Fall" }, 1 },
   { "What kind of place is this?", { "Hotel", "Hospital or Home", "Train station", "Bank" }, 1 },
