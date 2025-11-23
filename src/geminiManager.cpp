@@ -42,6 +42,7 @@ String GeminiManager::sendRequest() {
         Serial.print("HTTP Response code: ");
         Serial.println(httpResponseCode);
         response = http.getString();
+        Serial.println("API Response: " + response);
     } else {
         Serial.print("Error code: ");
         Serial.println(httpResponseCode);
@@ -66,7 +67,9 @@ bool GeminiManager::parseResponse(const String& jsonResponse, std::vector<Questi
 
     const char* text = doc["candidates"][0]["content"]["parts"][0]["text"];
     if (!text) {
-        Serial.println("No text in response");
+        Serial.println("No text in response. Full JSON:");
+        serializeJson(doc, Serial);
+        Serial.println();
         return false;
     }
 
