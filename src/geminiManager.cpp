@@ -20,7 +20,7 @@ bool GeminiManager::fetchQuestions(std::vector<Question>& questions) {
 
 String GeminiManager::sendRequest() {
     HTTPClient http;
-    String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+    String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent";
     
     http.begin(url);
     http.addHeader("Content-Type", "application/json");
@@ -28,7 +28,7 @@ String GeminiManager::sendRequest() {
 
     // JSON payload
     // Keep questions short to fit large-font display; return exactly 10 CAM-aligned items
-    String prompt = "Generate simple, elderly-friendly, joystick-navigable four-choice multiple-choice questions for a handheld delirium-screening device with no microphone and only a screen and joystick, ensuring each question is a purely visual, task-based prompt that objectively tests the four CAM criteria—acute onset through orientation tasks, inattention through short recall or visual tracking tasks, disorganized thinking through logic or pattern-continuation tasks, and altered level of consciousness through simple reaction- or attention-based visual tasks—while keeping every question extremely clear, small-screen compatible, and formatted only as a question followed by four answer options (A, B, C, D). Keep each prompt under 70 characters and each choice under 18 characters. Return ONLY a raw JSON array of 10 objects, each with: 'prompt' (string), 'choices' (array of 4 strings), 'correctChoice' (int 0-3). No numbering, no markdown, no explanations.";
+    String prompt = "Generate 10 simple, unique multiple-choice questions suitable for delirium screening—each with four options (A–D) and one clear correct answer—covering simple math, common-sense facts, reverse spelling, short-recall or counting attention checks, and basic logic or sequence-completion tasks, while avoiding trick questions, cultural references, time/place orientation. Make sure to specifically avoide these kind of questions as well: what comes after a specific shape, telling the patient to do something or an action, and anything a CAM assessment device cannot auto-score; ensure no question type is repeated more than twice and that the set collectively reflects CAM criteria for acute onset (basic orientation tasks), inattention (short recall/counting), disorganized thinking (logic/sequence), and altered consciousness (simple reaction/attention prompts). Add more context to the questions please. Keep each prompt under 70 characters and each choice under 18 characters. Return ONLY a raw JSON array of 10 objects, each with: 'prompt' (string), 'choices' (array of 4 strings), 'correctChoice' (int 0-3). No numbering, no markdown, no explanations.";
     String requestBody = "{\"contents\":[{\"parts\":[{\"text\":\"" + prompt + "\"}]}]}";
     
     Serial.println("Request Body: " + requestBody);
