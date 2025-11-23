@@ -7,7 +7,7 @@ namespace Storage {
 
 bool begin();
 bool appendResultToCSV(const String& timestamp, int score, const String& riskLevel,
-                       const String& patientCode, int additionalCorrect);
+                       const String& patientCode);
 bool removeCSV();
 bool csvExists();
 const char* csvPath();

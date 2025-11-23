@@ -16,6 +16,9 @@ class WebServerManager {
     void handleDownload();
     void handleClear();
     void handleView();
+    void handleStyle();
+    bool streamFileIfExists(const char* path, const char* contentType);
+    String loadFileToString(const char* path);
 
     WebServer server_{80};
     bool serverRunning_{false};

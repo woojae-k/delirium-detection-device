@@ -28,12 +28,13 @@ void DisplayManager::displayMenu(int selectedIndex) {
   tft_.setTextDatum(MC_DATUM);
   tft_.setTextSize(1);
 
-  const char* options[3] = {"1. Start Test", "2. Export Data", "3. Generate AI Qs"};
-  for (int i = 0; i < 3; ++i) {
+  const char* options[4] = {"1. Start Test", "2. Export Data", "3. Generate AI Qs", "4. Default Qs"};
+  const int optionCount = 4;
+  for (int i = 0; i < optionCount; ++i) {
     const bool isSelected = (i == selectedIndex);
     const uint16_t bg = isSelected ? TFT_WHITE : TFT_BLACK;
     const uint16_t fg = isSelected ? TFT_BLACK : TFT_WHITE;
-    const int y = tft_.height() / 2 + (i * 30) - 35; // Adjusted Y for 3 items
+    const int y = tft_.height() / 2 + (i * 26) - 40; // spacing adjusted for 4 items
     tft_.fillRect(20, y - 12, tft_.width() - 40, 28, bg);
     tft_.setTextColor(fg, bg);
     tft_.drawString(options[i], tft_.width() / 2, y, 4);

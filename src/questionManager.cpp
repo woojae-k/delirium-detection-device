@@ -5,7 +5,7 @@
 
 QuestionManager::QuestionManager() : currentQuestionIndex_(0) {
   // Initialize with default questions
-  questions_ = {
+  defaultQuestions_ = {
       { "Which season has snow?", { "Summer", "Winter", "Spring", "Fall" }, 1 },
       { "What kind of place is this?", { "Hotel", "Hospital or Home", "Train station", "Bank" }, 1 },
       { "When do you eat breakfast?", { "Morning", "Night", "Midnight", "Never" }, 0 },
@@ -17,6 +17,7 @@ QuestionManager::QuestionManager() : currentQuestionIndex_(0) {
       { "Where do fish live?", { "In trees", "In the water", "In the dirt", "In the sky" }, 1 },
       { "What is a hammer used for?", { "Hitting nails", "Cutting wood", "Cutting paper", "Eating food" }, 0 }
   };
+  questions_ = defaultQuestions_;
   reset();
 }
 
@@ -47,6 +48,11 @@ bool QuestionManager::isQuizComplete() const { return currentQuestionIndex_ >= g
 
 void QuestionManager::updateQuestions(const std::vector<Question>& newQuestions) {
     questions_ = newQuestions;
+    reset();
+}
+
+void QuestionManager::restoreDefaultQuestions() {
+    questions_ = defaultQuestions_;
     reset();
 }
 

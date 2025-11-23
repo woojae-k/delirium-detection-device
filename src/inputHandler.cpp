@@ -68,3 +68,10 @@ bool InputHandler::checkSelectButton() {
   lastSelectState = currentSelectState;
   return stateChanged;
 }
+
+void InputHandler::clearButtonStates() {
+  lastSelectState = digitalRead(SELECT_BUTTON_PIN);
+  lastResetState = digitalRead(RESET_BUTTON_PIN);
+  lastSelectPressTime = millis();
+  lastResetPressTime = millis();
+}

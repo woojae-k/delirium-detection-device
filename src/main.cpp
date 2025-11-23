@@ -44,16 +44,18 @@ class AppController {
     void enterMenu() {
       state_ = STATE_MENU;
       menuIndex_ = 0;
+      inputHandler_.clearButtonStates();
       displayManager_.displayMenu(menuIndex_);
     }
 
     void handleMenu() {
+      const int menuMaxIndex = 3; // 4 menu items: Test, Export, Generate AI Qs, Default Qs
       if (inputHandler_.checkJoystick()) {
         const JoystickState js = inputHandler_.getJoystickState();
         if (js == STATE_UP) {
           menuIndex_ = max(0, menuIndex_ - 1);
         } else if (js == STATE_DOWN) {
-          menuIndex_ = min(2, menuIndex_ + 1);
+          menuIndex_ = min(menuMaxIndex, menuIndex_ + 1);
         }
         displayManager_.displayMenu(menuIndex_);
       }
@@ -63,8 +65,10 @@ class AppController {
           startTest();
         } else if (menuIndex_ == 1) {
           enterExport();
-        } else {
+        } else if (menuIndex_ == 2) {
           enterGenerate();
+        } else {
+          useDefaultQuestions();
         }
       }
     }
@@ -164,11 +168,11 @@ class AppController {
             displayManager_.displayStatus("Generating Qs...");
             Serial.println("\nConnected! Fetching questions...");
             std::vector<Question> newQuestions;
-            if (geminiManager_.fetchQuestions(newQuestions)) {
-                questionManager_.updateQuestions(newQuestions);
-                displayManager_.displayStatus("Success!");
-                Serial.println("Questions updated!");
-                delay(2000);
+      if (geminiManager_.fetchQuestions(newQuestions)) {
+        questionManager_.updateQuestions(newQuestions);
+        displayManager_.displayStatus("Success!");
+        Serial.println("Questions updated!");
+        delay(2000);
             } else {
                 displayManager_.displayStatus("Failed to fetch");
                 Serial.println("Failed to fetch questions.");
@@ -178,10 +182,19 @@ class AppController {
             WiFi.mode(WIFI_OFF);
         } else {
             displayManager_.displayStatus("WiFi Failed");
-            Serial.println("\nWiFi Connection Failed.");
-            delay(2000);
-        }
-        
+        Serial.println("\nWiFi Connection Failed.");
+        delay(2000);
+      }
+      
+        // Clear button latches before returning to the menu to avoid phantom starts
+        inputHandler_.clearButtonStates();
+        enterMenu();
+    }
+    
+    void useDefaultQuestions() {
+        questionManager_.restoreDefaultQuestions();
+        displayManager_.displayStatus("Default Qs ready");
+        delay(1200);
         enterMenu();
     }
 
@@ -283,10 +296,8 @@ class AppController {
       const int totalQuestions = questionManager_.getQuestionCount();
       const String timestamp = String(millis());
       const String risk = (score_ >= (totalQuestions / 2)) ? "Low" : "Elevated";
-      const int additionalCorrect = max(0, score_ - lastScore_);
-      lastScore_ = score_;
 
-      if (Storage::appendResultToCSV(timestamp, score_, risk, currentPatientCode_, additionalCorrect)) {
+      if (Storage::appendResultToCSV(timestamp, score_, risk, currentPatientCode_)) {
         Serial.println("Result saved to /data.csv");
       } else {
         Serial.println("Failed to save result to /data.csv");
@@ -331,10 +342,9 @@ class AppController {
     bool awaitingResponse_{false};
     bool loggedAssessment_{false};
     unsigned long questionStartTimeMs_{0};
-    const unsigned long inactivityTimeoutMs_ = 30000;
+    const unsigned long inactivityTimeoutMs_ = 10000;
     const unsigned long longReactionThresholdMs_ = 7000;
     int score_{0};
-    int lastScore_{0};
     int patientCounter_{1};
     String currentPatientCode_{"PT-0000"};
 };

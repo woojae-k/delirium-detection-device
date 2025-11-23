@@ -14,6 +14,7 @@ class InputHandler {
     JoystickState getJoystickState() { return currentJoyState; };
     int getResetState() {return currentResetState;};
     int getSelectState() {return currentSelectState;};
+    void clearButtonStates();
 
   private:
 

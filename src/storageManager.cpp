@@ -17,15 +17,15 @@ bool begin() {
 }
 
 bool appendResultToCSV(const String& timestamp, int score, const String& riskLevel,
-                       const String& patientCode, int additionalCorrect) {
+                       const String& patientCode) {
   File file = LittleFS.open(kCsvPath, "a");
   if (!file) {
     Serial.println("Failed to open CSV for append");
     return false;
   }
 
-  file.printf("%s,%s,%d,%d,%s\n", timestamp.c_str(), patientCode.c_str(), score,
-              additionalCorrect, riskLevel.c_str());
+  file.printf("%s,%s,%d,%s\n", timestamp.c_str(), patientCode.c_str(), score,
+              riskLevel.c_str());
   file.close();
   return true;
 }

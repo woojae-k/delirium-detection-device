@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CAM Export</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="page">
+  <div class="card">
+    <h1>Data Export</h1>
+    <p>Download or review the latest CAM assessments.</p>
+    <div class="actions">
+      <form action="/download" method="get">
+        <button class="btn" type="submit">Download CSV</button>
+      </form>
+      <form action="/view" method="get">
+        <button class="btn info" type="submit">View CSV</button>
+      </form>
+      <form action="/clear" method="get">
+        <button class="btn secondary" type="submit">Delete Stored CSV</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

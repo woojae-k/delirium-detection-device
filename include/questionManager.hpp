@@ -15,11 +15,12 @@ class QuestionManager {
     int getCurrentQuestionIndex() const;
     bool isQuizComplete() const;
     void updateQuestions(const std::vector<Question>& newQuestions);
+    void restoreDefaultQuestions();
 
   private:
-    
   private:
     std::vector<Question> questions_;
+    std::vector<Question> defaultQuestions_;
     
     Question workingQuestion_;
     std::vector<int> questionOrder_;
