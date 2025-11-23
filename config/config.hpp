@@ -23,6 +23,6 @@
 // WIFI & GEMINI
 #define WIFI_SSID       "upa"
 #define WIFI_PASSWORD   "uuuoiois"
-#define GEMINI_API_KEY  "AIzaSyAICOZvSMXbFbwXsnzcc4CoU3uzl2Xffc0"
+#define GEMINI_API_KEY  "AIzaSyAGkImfN0jXhhEzZovZtQFvXcWIDZ48M1k"
 
 #endif
