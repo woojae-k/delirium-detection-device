@@ -21,8 +21,8 @@
 // End of Pin Definitions
  
 // WIFI & GEMINI
-#define WIFI_SSID       "Arka's iPhone"
-#define WIFI_PASSWORD   "arkajitm"
+#define WIFI_SSID       "upa"
+#define WIFI_PASSWORD   "uuuoiois"
 #define GEMINI_API_KEY  "AIzaSyAICOZvSMXbFbwXsnzcc4CoU3uzl2Xffc0"
 
 #endif
