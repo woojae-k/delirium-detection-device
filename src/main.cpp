@@ -1,13 +1,14 @@
 #include <Arduino.h>
 #include <WiFi.h>
 
+#include "geminiManager.hpp"
 #include "displayManager.hpp"
 #include "inputHandler.hpp"
 #include "questionManager.hpp"
 #include "storageManager.hpp"
 #include "webServerManager.hpp"
 
-enum AppState { STATE_MENU, STATE_TEST, STATE_EXPORT };
+enum AppState { STATE_MENU, STATE_TEST, STATE_EXPORT, STATE_GENERATE };
 
 class AppController {
   public:
@@ -32,6 +33,9 @@ class AppController {
         case STATE_EXPORT:
           handleExport();
           break;
+        case STATE_GENERATE:
+          handleGenerate();
+          break;
       }
       delay(10);
     }
@@ -47,9 +51,9 @@ class AppController {
       if (inputHandler_.checkJoystick()) {
         const JoystickState js = inputHandler_.getJoystickState();
         if (js == STATE_UP) {
-          menuIndex_ = 0;
+          menuIndex_ = max(0, menuIndex_ - 1);
         } else if (js == STATE_DOWN) {
-          menuIndex_ = 1;
+          menuIndex_ = min(2, menuIndex_ + 1);
         }
         displayManager_.displayMenu(menuIndex_);
       }
@@ -57,8 +61,10 @@ class AppController {
       if (inputHandler_.checkSelectButton()) {
         if (menuIndex_ == 0) {
           startTest();
-        } else {
+        } else if (menuIndex_ == 1) {
           enterExport();
+        } else {
+          enterGenerate();
         }
       }
     }
@@ -119,6 +125,65 @@ class AppController {
       }
     }
 
+    void enterGenerate() {
+        state_ = STATE_GENERATE;
+        // Display "Generating..."
+        // We can reuse displayExportInstructions or create a new method.
+        // For now, let's just clear screen and show text manually or add a method to DisplayManager.
+        // Since I can't easily add a method to DisplayManager without editing header again, I'll use a simple approach if possible
+        // or just edit DisplayManager header again.
+        // Actually, I can just use tft object if it was public, but it's private.
+        // I'll add a simple "displayMessage" to DisplayManager or just reuse displayExportInstructions with different text if it was flexible.
+        // But it's not.
+        // I'll assume I can add `displayMessage` to DisplayManager in a separate step if needed, 
+        // but for now I'll just print to Serial and maybe the user won't see it on screen immediately.
+        // Wait, I should provide feedback.
+        // I'll add `displayStatus(String)` to DisplayManager.
+        
+        // Actually, let's just do the logic here and blocking for now (simple).
+        // But I need to show something on screen.
+        // I'll add `displayStatus` to DisplayManager header and cpp.
+    }
+
+    void handleGenerate() {
+        // This will be a blocking operation for simplicity
+        displayManager_.displayStatus("Connecting to WiFi...");
+        Serial.println("Connecting to WiFi...");
+        
+        // Connect to WiFi
+        WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+        int attempts = 0;
+        while (WiFi.status() != WL_CONNECTED && attempts < 20) {
+            delay(500);
+            Serial.print(".");
+            attempts++;
+        }
+        
+        if (WiFi.status() == WL_CONNECTED) {
+            displayManager_.displayStatus("Generating Qs...");
+            Serial.println("\nConnected! Fetching questions...");
+            std::vector<Question> newQuestions;
+            if (geminiManager_.fetchQuestions(newQuestions)) {
+                questionManager_.updateQuestions(newQuestions);
+                displayManager_.displayStatus("Success!");
+                Serial.println("Questions updated!");
+                delay(2000);
+            } else {
+                displayManager_.displayStatus("Failed to fetch");
+                Serial.println("Failed to fetch questions.");
+                delay(2000);
+            }
+            WiFi.disconnect(true);
+            WiFi.mode(WIFI_OFF);
+        } else {
+            displayManager_.displayStatus("WiFi Failed");
+            Serial.println("\nWiFi Connection Failed.");
+            delay(2000);
+        }
+        
+        enterMenu();
+    }
+
     void displayCurrentQuestion() {
       if (questionManager_.isQuizComplete()) {
         finishQuiz();
@@ -168,13 +233,13 @@ class AppController {
       const unsigned long latency = now - questionStartTimeMs_;
 
       const Question current = questionManager_.getCurrentQuestion();
-      const char* chosenAnswer = current.choices[selectedChoice_];
+      String chosenAnswer = current.choices[selectedChoice_];
       const bool isCorrect = (selectedChoice_ == current.correctChoice);
       if (isCorrect) {
         score_++;
       }
 
-      logResult(current, chosenAnswer, isCorrect, latency, false);
+      logResult(current, chosenAnswer.c_str(), isCorrect, latency, false);
 
       questionManager_.nextQuestion();
 
@@ -255,6 +320,7 @@ class AppController {
     InputHandler inputHandler_;
     DisplayManager displayManager_;
     WebServerManager webServerManager_;
+    GeminiManager geminiManager_;
 
     AppState state_{STATE_MENU};
     int menuIndex_{0};

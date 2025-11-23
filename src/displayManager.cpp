@@ -28,19 +28,19 @@ void DisplayManager::displayMenu(int selectedIndex) {
   tft_.setTextDatum(MC_DATUM);
   tft_.setTextSize(1);
 
-  const char* options[2] = {"1. Start Test", "2. Export Data"};
-  for (int i = 0; i < 2; ++i) {
+  const char* options[3] = {"1. Start Test", "2. Export Data", "3. Generate AI Qs"};
+  for (int i = 0; i < 3; ++i) {
     const bool isSelected = (i == selectedIndex);
     const uint16_t bg = isSelected ? TFT_WHITE : TFT_BLACK;
     const uint16_t fg = isSelected ? TFT_BLACK : TFT_WHITE;
-    const int y = tft_.height() / 2 + (i * 30) - 20;
+    const int y = tft_.height() / 2 + (i * 30) - 35; // Adjusted Y for 3 items
     tft_.fillRect(20, y - 12, tft_.width() - 40, 28, bg);
     tft_.setTextColor(fg, bg);
     tft_.drawString(options[i], tft_.width() / 2, y, 4);
   }
 
   tft_.setTextColor(TFT_YELLOW, TFT_BLACK);
-  tft_.drawString("CAM Device Menu", tft_.width() / 2, 40, 2);
+  tft_.drawString("CAM Device Menu", tft_.width() / 2, 30, 2);
 }
 
 void DisplayManager::showQuestion(const Question& question, int selectedChoice) {
@@ -71,8 +71,8 @@ void DisplayManager::displayQuestion() {
   const int line_height = tft_.fontHeight(prompt_font) + 2;
   const int max_width = screen_width - 6;
 
-  auto drawWrappedText = [&](const char* text, int startX, int startY) {
-    String remaining(text);
+  auto drawWrappedText = [&](const String& text, int startX, int startY) {
+    String remaining = text;
     int y = startY;
     while (remaining.length() > 0) {
       String line = remaining;
@@ -82,7 +82,15 @@ void DisplayManager::displayQuestion() {
         line.remove(lastSpace);
       }
       if (line.length() == 0) {
-        break;
+        // If a single word is too long, force break it
+        if (remaining.length() > 0) {
+             line = remaining;
+             while (line.length() > 0 && tft_.textWidth(line, prompt_font) > max_width) {
+                 line = line.substring(0, line.length() - 1);
+             }
+        } else {
+            break;
+        }
       }
       tft_.drawString(line, startX, y, prompt_font);
       remaining.remove(0, line.length());
@@ -133,6 +141,14 @@ void DisplayManager::displayExportInstructions() {
   tft_.drawString("Open browser to", tft_.width() / 2, 130, 2);
   tft_.drawString("192.168.4.1", tft_.width() / 2, 155, 4);
   tft_.drawString("Press SELECT to exit", tft_.width() / 2, 200, 2);
+}
+
+void DisplayManager::displayStatus(const String& msg) {
+  tft_.fillScreen(TFT_BLACK);
+  tft_.setTextColor(TFT_WHITE, TFT_BLACK);
+  tft_.setTextDatum(MC_DATUM);
+  tft_.setTextSize(1);
+  tft_.drawString(msg, tft_.width() / 2, tft_.height() / 2, 4);
 }
 
 void DisplayManager::highlightChoice(int selectedChoice) {

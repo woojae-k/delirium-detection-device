@@ -2,6 +2,7 @@
 #define QUESTION_MANAGER_HPP
 
 #include <SPI.h>
+#include <vector>
 #include "data.hpp"
 
 class QuestionManager {
@@ -13,13 +14,15 @@ class QuestionManager {
     int getQuestionCount() const;
     int getCurrentQuestionIndex() const;
     bool isQuizComplete() const;
+    void updateQuestions(const std::vector<Question>& newQuestions);
 
   private:
-    static const Question baseQuestions_[];
-    static const int questionCount_;
-
+    
+  private:
+    std::vector<Question> questions_;
+    
     Question workingQuestion_;
-    int questionOrder_[10]; // max supported questions
+    std::vector<int> questionOrder_;
     int currentQuestionIndex_{0};
 
     void shuffleQuestions();

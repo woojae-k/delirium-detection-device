@@ -15,6 +15,7 @@ class DisplayManager {
     void highlightChoice(int selectedChoice = 0);
     void displayCompletionScreen(const String& patientCode);
     void displayExportInstructions();
+    void displayStatus(const String& msg);
 
   private:
     void displayQuestion();

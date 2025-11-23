@@ -19,5 +19,10 @@
 #define LOAD_FONT4
 
 // End of Pin Definitions
+ 
+// WIFI & GEMINI
+#define WIFI_SSID       "Arka's iPhone"
+#define WIFI_PASSWORD   "arkajitm"
+#define GEMINI_API_KEY  "AIzaSyA3reni0m-zqVNh0gZlKbPvPfVcHJtivyw"
 
 #endif
