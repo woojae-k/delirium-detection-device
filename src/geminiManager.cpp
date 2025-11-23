@@ -20,7 +20,7 @@ bool GeminiManager::fetchQuestions(std::vector<Question>& questions) {
 
 String GeminiManager::sendRequest() {
     HTTPClient http;
-    String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + String(GEMINI_API_KEY);
+    String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + String(GEMINI_API_KEY);
     
     http.begin(url);
     http.addHeader("Content-Type", "application/json");
