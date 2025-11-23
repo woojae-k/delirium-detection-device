@@ -12,6 +12,8 @@ class GeminiManager {
   private:
     String sendRequest();
     bool parseResponse(const String& jsonResponse, std::vector<Question>& questions);
+    String truncateToFit(const String& text, size_t maxLen);
+    void sanitizeQuestions(std::vector<Question>& questions);
 };
 
 #endif

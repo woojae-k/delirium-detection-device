@@ -27,8 +27,8 @@ String GeminiManager::sendRequest() {
     http.addHeader("X-goog-api-key", GEMINI_API_KEY);
 
     // JSON payload
-    // JSON payload (Manual construction)
-    String prompt = "Generate 5 multiple choice questions for delirium detection based on CAM principles: Acute onset, Inattention, Disorganized thinking, Altered level of consciousness. Return ONLY a raw JSON array (no markdown) where each object has: 'prompt' (string), 'choices' (array of 4 strings), 'correctChoice' (int 0-3).";
+    // Keep questions short to fit large-font display; return exactly 10 CAM-aligned items
+    String prompt = "Generate 10 SHORT multiple choice questions for bedside delirium screening using the CAM rubric (acute onset, inattention, disorganized thinking, altered consciousness). Keep each prompt under 70 characters and each choice under 18 characters. Return ONLY a raw JSON array of 10 objects, each with: 'prompt' (string), 'choices' (array of 4 strings), 'correctChoice' (int 0-3). No numbering, no markdown, no explanations.";
     String requestBody = "{\"contents\":[{\"parts\":[{\"text\":\"" + prompt + "\"}]}]}";
     
     Serial.println("Request Body: " + requestBody);
@@ -96,9 +96,17 @@ bool GeminiManager::parseResponse(const String& jsonResponse, std::vector<Questi
 
     std::vector<Question> newQuestions;
     for (JsonObject qObj : arr) {
+        if (!qObj["prompt"].is<String>() || !qObj["choices"].is<JsonArray>()) {
+            continue;
+        }
+
+        JsonArray choices = qObj["choices"];
+        if (choices.size() < 4) {
+            continue;
+        }
+
         Question q;
         q.prompt = qObj["prompt"].as<String>();
-        JsonArray choices = qObj["choices"];
         for (int i = 0; i < 4; i++) {
             q.choices[i] = choices[i].as<String>();
         }
@@ -106,6 +114,41 @@ bool GeminiManager::parseResponse(const String& jsonResponse, std::vector<Questi
         newQuestions.push_back(q);
     }
     
+    sanitizeQuestions(newQuestions);
+    if (newQuestions.size() < 10) {
+        Serial.println("Not enough valid questions returned from Gemini.");
+        return false;
+    }
+
+    // Ensure exactly 10 questions for consistent scoring and display
+    if (newQuestions.size() > 10) {
+        newQuestions.resize(10);
+    }
+
     questions = newQuestions;
     return true;
+}
+
+String GeminiManager::truncateToFit(const String& text, size_t maxLen) {
+    if (text.length() <= maxLen) return text;
+    if (maxLen <= 3) return text.substring(0, maxLen);
+    return text.substring(0, maxLen - 3) + "...";
+}
+
+void GeminiManager::sanitizeQuestions(std::vector<Question>& questions) {
+    const size_t maxPromptLen = 80;  // Fits within 3 lines of font 4 at 320px width
+    const size_t maxChoiceLen = 22;  // Fits large-font choices inside 2x2 grid
+
+    for (auto& q : questions) {
+        q.prompt.trim();
+        q.prompt = truncateToFit(q.prompt, maxPromptLen);
+        for (int i = 0; i < 4; ++i) {
+            q.choices[i].trim();
+            q.choices[i] = truncateToFit(q.choices[i], maxChoiceLen);
+        }
+        // Keep correctChoice within bounds
+        if (q.correctChoice < 0 || q.correctChoice > 3) {
+            q.correctChoice = 0;
+        }
+    }
 }
