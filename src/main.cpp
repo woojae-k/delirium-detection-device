@@ -23,6 +23,11 @@ class AppController {
     }
 
     void loop() {
+      if (inputHandler_.checkResetButton()) {
+        resetToMenu();
+        return;
+      }
+
       switch (state_) {
         case STATE_MENU:
           handleMenu();
@@ -86,11 +91,6 @@ class AppController {
     }
 
     void handleTest() {
-      if (inputHandler_.checkResetButton()) {
-        enterMenu();
-        return;
-      }
-
       if (quizComplete_) {
         if (inputHandler_.checkSelectButton()) {
           enterMenu();
@@ -173,7 +173,7 @@ class AppController {
         displayManager_.displayStatus("Success!");
         Serial.println("Questions updated!");
         delay(2000);
-            } else {
+      } else {
                 displayManager_.displayStatus("Failed to fetch");
                 Serial.println("Failed to fetch questions.");
                 delay(2000);
@@ -181,7 +181,7 @@ class AppController {
             WiFi.disconnect(true);
             WiFi.mode(WIFI_OFF);
         } else {
-            displayManager_.displayStatus("WiFi Failed");
+        displayManager_.displayStatus("WiFi Failed");
         Serial.println("\nWiFi Connection Failed.");
         delay(2000);
       }
@@ -189,6 +189,25 @@ class AppController {
         // Clear button latches before returning to the menu to avoid phantom starts
         inputHandler_.clearButtonStates();
         enterMenu();
+    }
+    
+    void resetToMenu() {
+      if (state_ == STATE_EXPORT && webServerManager_.isRunning()) {
+        webServerManager_.stopExportServer();
+      }
+      if (WiFi.status() == WL_CONNECTED || state_ == STATE_GENERATE) {
+        WiFi.disconnect(true);
+        WiFi.mode(WIFI_OFF);
+      }
+      awaitingResponse_ = false;
+      quizComplete_ = false;
+      loggedAssessment_ = false;
+      selectedChoice_ = 0;
+      score_ = 0;
+      questionManager_.reset(); // reset question order and progress
+      inputHandler_.clearButtonStates();
+      enterMenu();
+      Serial.println("Reset button pressed: returning to main menu.");
     }
     
     void useDefaultQuestions() {
