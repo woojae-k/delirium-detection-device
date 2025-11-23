@@ -151,9 +151,10 @@ class AppController {
         Serial.println("Connecting to WiFi...");
         
         // Connect to WiFi
+        WiFi.mode(WIFI_STA);
         WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
         int attempts = 0;
-        while (WiFi.status() != WL_CONNECTED && attempts < 20) {
+        while (WiFi.status() != WL_CONNECTED && attempts < 40) {
             delay(500);
             Serial.print(".");
             attempts++;
