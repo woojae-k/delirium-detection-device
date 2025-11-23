@@ -28,7 +28,7 @@ String GeminiManager::sendRequest() {
 
     // JSON payload
     // Keep questions short to fit large-font display; return exactly 10 CAM-aligned items
-    String prompt = "Generate 10 SHORT multiple choice questions for bedside delirium screening using the CAM rubric (acute onset, inattention, disorganized thinking, altered consciousness). Keep each prompt under 70 characters and each choice under 18 characters. Return ONLY a raw JSON array of 10 objects, each with: 'prompt' (string), 'choices' (array of 4 strings), 'correctChoice' (int 0-3). No numbering, no markdown, no explanations.";
+    String prompt = "Generate simple, elderly-friendly, joystick-navigable four-choice multiple-choice questions for a handheld delirium-screening device that objectively test all four CAM criteria—acute onset through basic orientation tasks, inattention through short recall or counting tasks, disorganized thinking through logic or pattern questions, and altered level of consciousness through phrase-repetition or reaction-based prompts—ensuring every question is task-based, extremely clear, short enough for a small screen, and formatted only as questions with four answer options (A, B, C, D). Keep each prompt under 70 characters and each choice under 18 characters. Return ONLY a raw JSON array of 10 objects, each with: 'prompt' (string), 'choices' (array of 4 strings), 'correctChoice' (int 0-3). No numbering, no markdown, no explanations.";
     String requestBody = "{\"contents\":[{\"parts\":[{\"text\":\"" + prompt + "\"}]}]}";
     
     Serial.println("Request Body: " + requestBody);
