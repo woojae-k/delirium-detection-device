@@ -26,13 +26,11 @@ String GeminiManager::sendRequest() {
     http.addHeader("Content-Type", "application/json");
 
     // JSON payload
-    JsonDocument doc;
-    JsonObject content = doc["contents"].add();
-    JsonObject part = content["parts"].add();
-    part["text"] = "Generate 5 multiple choice questions for delirium detection based on CAM principles: Acute onset, Inattention, Disorganized thinking, Altered level of consciousness. Return ONLY a raw JSON array (no markdown) where each object has: 'prompt' (string), 'choices' (array of 4 strings), 'correctChoice' (int 0-3).";
-
-    String requestBody;
-    serializeJson(doc, requestBody);
+    // JSON payload (Manual construction)
+    String prompt = "Generate 5 multiple choice questions for delirium detection based on CAM principles: Acute onset, Inattention, Disorganized thinking, Altered level of consciousness. Return ONLY a raw JSON array (no markdown) where each object has: 'prompt' (string), 'choices' (array of 4 strings), 'correctChoice' (int 0-3).";
+    String requestBody = "{\"contents\":[{\"parts\":[{\"text\":\"" + prompt + "\"}]}]}";
+    
+    Serial.println("Request Body: " + requestBody);
 
     Serial.println("Sending request to Gemini...");
     int httpResponseCode = http.POST(requestBody);
