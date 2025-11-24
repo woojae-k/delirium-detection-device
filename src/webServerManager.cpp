@@ -8,6 +8,8 @@
 
 namespace {
 const char* kSsid = "CAM_Device";
+const char* kMdnsHostname = "cam-device";
+constexpr bool kServeExportAssetsFromLittleFs = false;  // set true if you upload /export files to LittleFS
 
 // Fallback assets if LittleFS files are missing
 const char defaultStyleCss[] PROGMEM = R"rawliteral(
@@ -73,22 +75,37 @@ bool WebServerManager::startExportServer() {
   configureRoutes();
   server_.begin();
   serverRunning_ = true;
+  IPAddress apIp = WiFi.softAPIP();
+
+  startCaptiveDns(apIp);
+  startMdns();
 
   Serial.println("Export server started");
   Serial.print("SSID: ");
   Serial.println(kSsid);
   Serial.print("IP: ");
-  Serial.println(WiFi.softAPIP());
+  Serial.println(apIp);
+  Serial.print("mDNS: http://");
+  Serial.print(kMdnsHostname);
+  Serial.println(".local/");
 
   return true;
 }
 
 void WebServerManager::configureRoutes() {
-  server_.on("/", HTTP_GET, [this]() { handleRoot(); });
-  server_.on("/download", HTTP_GET, [this]() { handleDownload(); });
-  server_.on("/clear", HTTP_GET, [this]() { handleClear(); });
-  server_.on("/view", HTTP_GET, [this]() { handleView(); });
-  server_.on("/style.css", HTTP_GET, [this]() { handleStyle(); });
+  server_.on("/", HTTP_ANY, [this]() { handleRoot(); });
+  server_.on("/download", HTTP_ANY, [this]() { handleDownload(); });
+  server_.on("/clear", HTTP_ANY, [this]() { handleClear(); });
+  server_.on("/view", HTTP_ANY, [this]() { handleView(); });
+  server_.on("/style.css", HTTP_ANY, [this]() { handleStyle(); });
+  // Handle common connectivity-check endpoints to avoid noisy logs.
+  server_.on("/generate_204", HTTP_ANY, [this]() { server_.send(204); });
+  server_.on("/gen_204", HTTP_ANY, [this]() { server_.send(204); });
+  server_.on("/ncsi.txt", HTTP_ANY, [this]() { server_.send(204); });
+  server_.on("/connecttest.txt", HTTP_ANY, [this]() { server_.send(204); });
+  server_.onNotFound([this]() {
+    sendMessage(404, "Route not found. Try /, /download, /view, or /clear.");
+  });
 }
 
 void WebServerManager::stopExportServer() {
@@ -96,6 +113,8 @@ void WebServerManager::stopExportServer() {
     return;
   }
 
+  stopCaptiveDns();
+  stopMdns();
   server_.stop();
   WiFi.softAPdisconnect(true);
   WiFi.mode(WIFI_OFF);
@@ -105,27 +124,32 @@ void WebServerManager::stopExportServer() {
 
 void WebServerManager::loop() {
   if (serverRunning_) {
+    if (dnsRunning_) {
+      dnsServer_.processNextRequest();
+    }
     server_.handleClient();
   }
 }
 
 void WebServerManager::handleRoot() {
-  if (streamFileIfExists("/export/index.html", "text/html")) {
-    return;
+  if (kServeExportAssetsFromLittleFs) {
+    if (streamFileIfExists("/export/index.html", "text/html")) {
+      return;
+    }
+    Serial.println("Serving fallback index.html");
   }
-  Serial.println("Serving fallback index.html");
   server_.send_P(200, "text/html", defaultIndexHtml);
 }
 
 void WebServerManager::handleDownload() {
   if (!Storage::csvExists()) {
-    server_.send(404, "text/plain", "CSV not found");
+    sendMessage(404, "CSV not found. Go back to / to return home.");
     return;
   }
 
   File file = LittleFS.open(Storage::csvPath(), "r");
   if (!file) {
-    server_.send(500, "text/plain", "Failed to open CSV");
+    sendMessage(500, "Download failed: could not open the CSV file.");
     return;
   }
 
@@ -136,21 +160,21 @@ void WebServerManager::handleDownload() {
 
 void WebServerManager::handleClear() {
   if (Storage::removeCSV()) {
-    server_.send(200, "text/plain", "CSV removed");
+    sendMessage(200, "CSV removed. Go back to / to return home.");
   } else {
-    server_.send(500, "text/plain", "Failed to remove CSV");
+    sendMessage(500, "Delete failed: could not delete the CSV file.");
   }
 }
 
 void WebServerManager::handleView() {
   if (!Storage::csvExists()) {
-    server_.send(404, "text/plain", "CSV not found");
+    sendMessage(404, "CSV not found. Go back to / to return home.");
     return;
   }
 
   File file = LittleFS.open(Storage::csvPath(), "r");
   if (!file) {
-    server_.send(500, "text/plain", "Failed to open CSV");
+    sendMessage(500, "View failed: could not open the CSV file.");
     return;
   }
 
@@ -186,24 +210,34 @@ void WebServerManager::handleView() {
   }
   file.close();
 
-  String tmpl = loadFileToString("/export/view.html");
-  if (tmpl.isEmpty()) {
-    Serial.println("Serving fallback view.html");
-    tmpl = String(defaultViewHtml);
+  String tmpl = String(defaultViewHtml);
+  if (kServeExportAssetsFromLittleFs) {
+    String maybeTmpl = loadFileToString("/export/view.html");
+    if (!maybeTmpl.isEmpty()) {
+      tmpl = maybeTmpl;
+    } else {
+      Serial.println("Serving fallback view.html");
+    }
   }
   tmpl.replace("{{TABLE_ROWS}}", rows);
   server_.send(200, "text/html", tmpl);
 }
 
 void WebServerManager::handleStyle() {
-  if (streamFileIfExists("/export/style.css", "text/css")) {
-    return;
+  if (kServeExportAssetsFromLittleFs) {
+    if (streamFileIfExists("/export/style.css", "text/css")) {
+      return;
+    }
+    Serial.println("Serving fallback style.css");
   }
-  Serial.println("Serving fallback style.css");
   server_.send_P(200, "text/css", defaultStyleCss);
 }
 
 bool WebServerManager::streamFileIfExists(const char* path, const char* contentType) {
+  if (!LittleFS.exists(path)) {
+    Serial.printf("Static file missing: %s\n", path);
+    return false;
+  }
   File file = LittleFS.open(path, "r");
   if (!file) {
     Serial.printf("Static file missing: %s\n", path);
@@ -215,6 +249,10 @@ bool WebServerManager::streamFileIfExists(const char* path, const char* contentT
 }
 
 String WebServerManager::loadFileToString(const char* path) {
+  if (!LittleFS.exists(path)) {
+    Serial.printf("Template missing: %s\n", path);
+    return String();
+  }
   File file = LittleFS.open(path, "r");
   if (!file) {
     Serial.printf("Template missing: %s\n", path);
@@ -223,4 +261,48 @@ String WebServerManager::loadFileToString(const char* path) {
   String content = file.readString();
   file.close();
   return content;
+}
+
+void WebServerManager::sendMessage(int statusCode, const String& message) {
+  String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'><script>";
+  html += "alert('";
+  String safeMessage = message;
+  safeMessage.replace("\\", "\\\\");
+  safeMessage.replace("'", "\\'");
+  html += safeMessage;
+  html += "');";
+  html += "window.location.href='/'";
+  html += ";</script></head><body></body></html>";
+  server_.send(statusCode, "text/html", html);
+}
+
+void WebServerManager::startCaptiveDns(const IPAddress& apIp) {
+  // Resolve all domains to our AP IP to mimic a captive portal; helps users who type random URLs.
+  dnsRunning_ = dnsServer_.start(53, "*", apIp);
+  if (!dnsRunning_) {
+    Serial.println("Failed to start DNS server for captive portal");
+  }
+}
+
+void WebServerManager::stopCaptiveDns() {
+  if (dnsRunning_) {
+    dnsServer_.stop();
+    dnsRunning_ = false;
+  }
+}
+
+void WebServerManager::startMdns() {
+  if (MDNS.begin(kMdnsHostname)) {
+    MDNS.addService("http", "tcp", 80);
+    mdnsRunning_ = true;
+  } else {
+    Serial.println("Failed to start mDNS responder");
+  }
+}
+
+void WebServerManager::stopMdns() {
+  if (mdnsRunning_) {
+    MDNS.end();
+    mdnsRunning_ = false;
+  }
 }

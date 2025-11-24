@@ -10,6 +10,7 @@ struct Question {
 };
 
 enum JoystickState { STATE_NEUTRAL, STATE_LEFT, STATE_RIGHT, STATE_UP, STATE_DOWN };
+enum AssessmentState {DEFAULT_QUESTIONS, AI_GENERATED_QUESTIONS};
 
 
 #endif

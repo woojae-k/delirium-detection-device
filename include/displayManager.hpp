@@ -10,7 +10,7 @@ class DisplayManager {
   public:
     void init();
     void displayStartScreen();
-    void displayMenu(int selectedIndex);
+    void displayMenu(int selectedIndex, AssessmentState currentStatus = DEFAULT_QUESTIONS);
     void showQuestion(const Question& question, int selectedChoice = 0);
     void highlightChoice(int selectedChoice = 0);
     void displayCompletionScreen(const String& patientCode);
@@ -21,7 +21,8 @@ class DisplayManager {
     void displayQuestion();
     void setQuestion(Question q);
 
-    TFT_eSPI tft_ = TFT_eSPI(); // Initialize the TFT display
+    // Initialize the TFT display
+    TFT_eSPI tft_ = TFT_eSPI(); 
     Question q_;
     int selectedChoice_;
 };

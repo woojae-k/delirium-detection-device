@@ -23,7 +23,7 @@ void DisplayManager::displayStartScreen() {
   tft_.drawString("Use joystick to choose", tft_.width() / 2, tft_.height() * 5 / 8, 2);
 }
 
-void DisplayManager::displayMenu(int selectedIndex) {
+void DisplayManager::displayMenu(int selectedIndex, AssessmentState currentStatus) {
   tft_.fillScreen(TFT_BLACK);
   tft_.setTextDatum(MC_DATUM);
   tft_.setTextSize(1);
@@ -34,7 +34,8 @@ void DisplayManager::displayMenu(int selectedIndex) {
     const bool isSelected = (i == selectedIndex);
     const uint16_t bg = isSelected ? TFT_WHITE : TFT_BLACK;
     const uint16_t fg = isSelected ? TFT_BLACK : TFT_WHITE;
-    const int y = tft_.height() / 2 + (i * 26) - 40; // spacing adjusted for 4 items
+    // spacing adjusted for 4 items
+    const int y = tft_.height() / 2 + (i * 26) - 40; 
     tft_.fillRect(20, y - 12, tft_.width() - 40, 28, bg);
     tft_.setTextColor(fg, bg);
     tft_.drawString(options[i], tft_.width() / 2, y, 4);
@@ -42,6 +43,12 @@ void DisplayManager::displayMenu(int selectedIndex) {
 
   tft_.setTextColor(TFT_YELLOW, TFT_BLACK);
   tft_.drawString("CAM Device Menu", tft_.width() / 2, 30, 2);
+
+  if (currentStatus == AI_GENERATED_QUESTIONS) {
+    tft_.drawString("Mode: AI Generated Qs", tft_.width() / 2, 200, 2);
+  } else {
+    tft_.drawString("Mode: Default Qs", tft_.width() / 2, 200, 2);
+  }
 }
 
 void DisplayManager::showQuestion(const Question& question, int selectedChoice) {
@@ -58,7 +65,8 @@ void DisplayManager::displayQuestion() {
 
   const int screen_width = tft_.width();
   const int screen_height = tft_.height();
-  const int question_area_height = screen_height / 3; // top band for the prompt
+  // top band for the prompt
+  const int question_area_height = screen_height / 3; 
   const int option_width = screen_width / 2;
   const int option_height = (screen_height - question_area_height) / 2;
 
@@ -97,7 +105,8 @@ void DisplayManager::displayQuestion() {
       remaining.remove(0, line.length());
       remaining.trim();
       y += line_height;
-      if (y > question_area_height - line_height) break; // prevent overflow into answer grid
+      // prevent overflow into answer grid
+      if (y > question_area_height - line_height) break; 
     }
   };
 
@@ -139,9 +148,11 @@ void DisplayManager::displayExportInstructions() {
 
   tft_.drawString("Connect to WiFi:", tft_.width() / 2, 60, 2);
   tft_.drawString("CAM_Device", tft_.width() / 2, 80, 4);
-  tft_.drawString("Open browser to", tft_.width() / 2, 130, 2);
-  tft_.drawString("192.168.4.1", tft_.width() / 2, 155, 4);
-  tft_.drawString("Press SELECT to exit", tft_.width() / 2, 200, 2);
+  tft_.drawString("Open browser to", tft_.width() / 2, 110, 2);
+  tft_.drawString("192.168.4.1", tft_.width() / 2, 135, 4);
+  tft_.drawString("or", tft_.width() / 2, 155, 2);
+  tft_.drawString("http://cam-device.local/", tft_.width() / 2, 185, 4);
+  tft_.drawString("Press SELECT to exit", tft_.width() / 2, 215, 2);
 }
 
 void DisplayManager::displayStatus(const String& msg) {
